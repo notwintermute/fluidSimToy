@@ -1,8 +1,10 @@
 import math
 import pygame
 import numpy as np
-sqSide = 20
-noSq = 50
+import time
+
+sqSide = 4
+noSq = 100
 sqRes = noSq * sqSide
 resX = sqRes
 resY = sqRes
@@ -14,7 +16,6 @@ aDiv = 9*np.ones((n, n))
 line1 = 6*np.ones((1, n))
 line1[0, 0] = line1[0, -1] = 4
 aDiv[0,:] = aDiv[-1, :]= aDiv[:, 0] = aDiv[:, -1] = line1
-print(aDiv)
 # mult matrix
 line2 = np.zeros((1,n))
 line2[0, 0:2] = 1
@@ -27,7 +28,6 @@ aMul = np.concatenate((aMul, np.ones((1,3))), axis=1)
 aMul = np.concatenate((aMul, np.zeros((1,n))), axis=1)
 aMul[0, -1] = aMul[0, -2] = 1
 aMul = aMul.reshape((n, n))
-print(aMul)
 
 emitters = []
 brushSize = 0
@@ -72,7 +72,7 @@ while running:
     if drawing:
         for x in range(2*brushSize+1):
             for y in range(2*brushSize+1):
-                grid[mouseSq[0] + x-brushSize, mouseSq[1]+ y-brushSize] = 100
+                grid[mouseSq[0] + x-brushSize, mouseSq[1]+ y-brushSize] = 255
     if erasing:
         for x in range(2 * brushSize + 1):
             for y in range(2 * brushSize + 1):
@@ -86,9 +86,6 @@ while running:
     surface.fill((0, 0, 0))  # resets the screen to black
     for x in range(noSq):
         for y in range(noSq):
-            sqX = x * sqSide
-            sqY = y * sqSide
-            perc = (255 * grid[x, y] / 100) % 256
-            color = (perc, perc, perc)
-            pygame.draw.rect(surface, color, (sqX, sqY, sqSide, sqSide))
+            color = (grid[x,y], grid[x,y], grid[x,y])
+            pygame.draw.rect(surface, color, (x*sqSide, y*sqSide, sqSide, sqSide))
     pygame.display.flip()
