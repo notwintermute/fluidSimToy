@@ -1,0 +1,95 @@
+import math
+import pygame
+
+sqSide = 4
+noSq = 100
+sqRes = noSq * sqSide
+resX = sqRes
+resY = sqRes
+grid = []
+for x in range(noSq):
+    grid.append([])
+    for y in range(noSq):
+        grid[x].append(0)
+
+emitters = []
+brushSize = 1
+drawing = False
+erasing = False
+pygame.init()
+
+# initialize surface and start the main loop
+surface = pygame.display.set_mode((resX, resY))
+pygame.display.set_caption('fluidsim')
+running = True
+# --------------------------------------- Main Loop ---------------------------------------
+while running:
+    mouse = pygame.mouse.get_pos()  # puts the mouse position into a 2d tuple
+    mouseSq = [math.floor(mouse[0] / sqSide), math.floor(mouse[1] / sqSide)]
+    # ------------------------------------- input handling -------------------------------------
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            break
+        # ------------------------------------ mouse click actions ------------------------------------
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                drawing = True
+            if event.button == 3:
+                erasing = True
+        if event.type == pygame.MOUSEBUTTONUP:  # releasing the hold
+            drawing = False
+            erasing = False
+        # ------------------------------------ key press actions ------------------------------------
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_s:
+                for x in range(1, noSq-1):
+                    for y in range(1, noSq-1):
+                        g = 0
+                        for a in range(3):
+                            for b in range(3):
+                                g += grid[x + a-1][y +b-1]
+                        g /= 9
+                        for a in range(3):
+                            for b in range(3):
+                                grid[x + a - 1][y + b - 1] = g
+            if event.key == pygame.K_a:
+                brushSize += 1
+            if event.key == pygame.K_z:
+                brushSize -= 1
+            if event.key == pygame.K_q:
+                emitters.append(mouseSq)
+
+    # ---------------------------------------- Updating Parameters ----------------------------------------
+    if drawing:
+        for x in range(2*brushSize+1):
+            for y in range(2*brushSize+1):
+                grid[mouseSq[0] + x-brushSize][mouseSq[1]+ y-brushSize] = 100
+    if erasing:
+        for x in range(2 * brushSize + 1):
+            for y in range(2 * brushSize + 1):
+                grid[mouseSq[0] + x - brushSize][mouseSq[1] + y - brushSize] = 0
+
+    for p in emitters:
+        grid[p[0]][p[1]] = 100
+
+    for x in range(1, noSq - 1):
+        for y in range(1, noSq - 1):
+            g = 0
+            for a in range(3):
+                for b in range(3):
+                    g += grid[x + a - 1][y + b - 1]
+            g /= 9
+            for b in range(3):
+                for a in range(3):
+                    grid[x + a - 1][y + b - 1] = g
+    # ---------------------------------------- Rendering ----------------------------------------
+    surface.fill((0, 0, 0))  # resets the screen to black
+    for x in range(noSq):
+        for y in range(noSq):
+            sqX = x * sqSide
+            sqY = y * sqSide
+            perc = (255 * grid[x][y] / 100) % 256
+            color = (perc, perc, perc)
+            pygame.draw.rect(surface, color, (sqX, sqY, sqSide, sqSide))
+    pygame.display.flip()
