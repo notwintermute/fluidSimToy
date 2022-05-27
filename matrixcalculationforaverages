@@ -1,0 +1,28 @@
+import numpy as np
+n = 5
+inp = []
+for x in range(n):
+    inp.append([])
+    for y in range(n):
+        inp[x].append((x+y+1)%2)
+A = np.array(inp)
+R = []
+for x in range(n-3):
+    for a in range(3):
+        R.append(1)
+    for b in range(n-2):
+        R.append(0)
+for a in range(3):
+    R.append(1)
+oRow1 = np.array(R).reshape((n-2),n)
+print("inp")
+print(A)
+print("row 1")
+print(oRow1)
+first = np.matmul(oRow1, A)
+print("after row")
+print(first)
+print("row 2")
+avg = np.matmul(oRow1, first.transpose())
+print('avg')
+print(avg/9)
