@@ -1,19 +1,36 @@
 import math
 import pygame
-
-sqSide = 4
-noSq = 100
+import numpy as np
+sqSide = 20
+noSq = 50
 sqRes = noSq * sqSide
 resX = sqRes
 resY = sqRes
-grid = []
-for x in range(noSq):
-    grid.append([])
-    for y in range(noSq):
-        grid[x].append(0)
+n = noSq
+grid = np.zeros((n,n))  # grid where amount is stored
+
+# dividing matrix
+aDiv = 9*np.ones((n, n))
+line1 = 6*np.ones((1, n))
+line1[0, 0] = line1[0, -1] = 4
+aDiv[0,:] = aDiv[-1, :]= aDiv[:, 0] = aDiv[:, -1] = line1
+print(aDiv)
+# mult matrix
+line2 = np.zeros((1,n))
+line2[0, 0:2] = 1
+aMul = line2
+line3 = np.zeros((1,n+1))
+line3[0, 0:3] = 1
+for i in range(n-3):
+    aMul = np.concatenate((aMul, line3), axis=1)
+aMul = np.concatenate((aMul, np.ones((1,3))), axis=1)
+aMul = np.concatenate((aMul, np.zeros((1,n))), axis=1)
+aMul[0, -1] = aMul[0, -2] = 1
+aMul = aMul.reshape((n, n))
+print(aMul)
 
 emitters = []
-brushSize = 1
+brushSize = 0
 drawing = False
 erasing = False
 pygame.init()
@@ -43,16 +60,7 @@ while running:
         # ------------------------------------ key press actions ------------------------------------
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
-                for x in range(1, noSq-1):
-                    for y in range(1, noSq-1):
-                        g = 0
-                        for a in range(3):
-                            for b in range(3):
-                                g += grid[x + a-1][y +b-1]
-                        g /= 9
-                        for a in range(3):
-                            for b in range(3):
-                                grid[x + a - 1][y + b - 1] = g
+                grid = np.matmul(aMul, np.matmul(aMul, grid).transpose()) / aDiv
             if event.key == pygame.K_a:
                 brushSize += 1
             if event.key == pygame.K_z:
@@ -64,32 +72,23 @@ while running:
     if drawing:
         for x in range(2*brushSize+1):
             for y in range(2*brushSize+1):
-                grid[mouseSq[0] + x-brushSize][mouseSq[1]+ y-brushSize] = 100
+                grid[mouseSq[0] + x-brushSize, mouseSq[1]+ y-brushSize] = 100
     if erasing:
         for x in range(2 * brushSize + 1):
             for y in range(2 * brushSize + 1):
-                grid[mouseSq[0] + x - brushSize][mouseSq[1] + y - brushSize] = 0
+                grid[mouseSq[0] + x - brushSize, mouseSq[1] + y - brushSize] = 0
 
     for p in emitters:
         grid[p[0]][p[1]] = 100
 
-    for x in range(1, noSq - 1):
-        for y in range(1, noSq - 1):
-            g = 0
-            for a in range(3):
-                for b in range(3):
-                    g += grid[x + a - 1][y + b - 1]
-            g /= 9
-            for b in range(3):
-                for a in range(3):
-                    grid[x + a - 1][y + b - 1] = g
+    grid = (np.matmul(aMul, np.matmul(aMul, grid).transpose()) / aDiv).transpose()
     # ---------------------------------------- Rendering ----------------------------------------
     surface.fill((0, 0, 0))  # resets the screen to black
     for x in range(noSq):
         for y in range(noSq):
             sqX = x * sqSide
             sqY = y * sqSide
-            perc = (255 * grid[x][y] / 100) % 256
+            perc = (255 * grid[x, y] / 100) % 256
             color = (perc, perc, perc)
             pygame.draw.rect(surface, color, (sqX, sqY, sqSide, sqSide))
     pygame.display.flip()
